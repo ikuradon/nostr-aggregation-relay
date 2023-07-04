@@ -1,0 +1,240 @@
+services:
+  strfry-relay:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    networks:
+      - internal_network
+      - traefik_network
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.services.strfry.loadbalancer.server.port": "7777"
+      "traefik.http.routers.strfry.rule": "Host(`yabu.me`) && PathPrefix(`/`) && (Header(`Upgrade`, `websocket`) || Header(`accept`, `application/nostr+json`))"
+      "traefik.http.routers.strfry.tls.certresolver": "resolver"
+      "traefik.http.routers.strfry.tls.domains[0].main": "yabu.me"
+      "traefik.http.routers.strfry.tls.domains[0].sans": "*.yabu.me"
+      "application.module": "strfry"
+      "application.type": "server"
+
+  strfry-mirror-wirednet-jp:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://relay-jp.nostr.wirednet.jp
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror-heguro:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://nostrja-kari.heguro.com
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror-nostrich-jp:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://universe.nostrich.land/?lang=ja
+    volumes:
+      - ./data/strfry/strfry-no-chat.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+
+  strfry-mirror-h3z:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream ws://100.105.62.5:9000 # via home proxy
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror-h3z-paid:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://nostr-paid.h3z.jp
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror-holybea:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://nostr.holybea.com
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror-nokotaro:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://nostr-relay.nokotaro.com --dir up
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror--nostream-ocha-one:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://nostream.ocha.one
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.type": "worker"
+
+  strfry-mirror-fediverse:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream ws://100.105.62.5:9001 # via home proxy
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    networks:
+      - internal_network
+      - external_network
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  strfry-mirror-wirednet-global:
+    image: local/strfry
+    build: ./repos/strfry
+    restart: always
+    command: stream wss://relay.nostr.wirednet.jp --dir up
+    volumes:
+      - ./data/strfry/strfry.conf:/etc/strfry.conf
+      - ./repos/writepolicy:/writepolicy
+      - ./data/strfry/db:/app/strfry-db
+    depends_on:
+      - strfry-relay
+    pid: service:strfry-relay
+    labels:
+      "application.module": "strfry"
+      "application.type": "worker"
+
+  viewer:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./repos/nostr-global-viewer/dist:/usr/share/nginx/html
+    networks:
+      - traefik_network
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.services.yabu-me-viewer.loadbalancer.server.port": "80"
+      "traefik.http.routers.yabu-me-viewer.rule": "Host(`yabu.me`) && PathPrefix(`/`)"
+      "traefik.http.routers.yabu-me-viewer.tls.certresolver": "resolver"
+      "traefik.http.routers.yabu-me-viewer.tls.domains[0].main": "yabu.me"
+      "traefik.http.routers.yabu-me-viewer.tls.domains[0].sans": "*.yabu.me"
+
+  njump:
+    build: ./repos/njump
+    restart: always
+    networks:
+      - traefik_network
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.services.yabu-me-njump.loadbalancer.server.port": "2999"
+      "traefik.http.routers.yabu-me-njump.rule": "Host(`yabu.me`) && PathPrefix(`/n`)"
+      "traefik.http.routers.yabu-me-njump.tls.certresolver": "resolver"
+      "traefik.http.routers.yabu-me-njump.tls.domains[0].main": "yabu.me"
+      "traefik.http.routers.yabu-me-njump.tls.domains[0].sans": "*.yabu.me"
+
+networks:
+  traefik_network:
+    external: true
+  external_network: {}
+  internal_network:
+    internal: true
